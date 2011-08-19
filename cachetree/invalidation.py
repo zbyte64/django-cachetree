@@ -11,8 +11,7 @@ from django.db.models.manager import Manager
 from django.db.models.fields.related import (
     SingleRelatedObjectDescriptor, ReverseSingleRelatedObjectDescriptor, 
     ForeignRelatedObjectsDescriptor, ManyRelatedObjectsDescriptor,
-    ReverseManyRelatedObjectsDescriptor, ForeignKey)     
-from django.db.models.sql.constants import LOOKUP_SEP
+    ReverseManyRelatedObjectsDescriptor, ForeignKey)
 from django.utils.functional import wraps
 from cache import cache
 from utils import generate_base_key, get_cached_models, get_cache_settings
@@ -139,9 +138,10 @@ class Invalidator(object):
         keys = set()
         
         for instance in instances:
+            model = instance.__class__
             instance_variants = [instance]
             if hasattr(instance, "_orig_state"):
-                orig = instance.__class__()
+                orig = model()
                 orig.__dict__ = instance._orig_state
                 instance_variants.append(orig)
                 
@@ -156,7 +156,12 @@ class Invalidator(object):
                         
                     kwargs = {}
                     for fieldname in lookup:
-                        kwargs[fieldname] = getattr(instance, fieldname)
+                        if fieldname == "pk":
+                            field = model._meta.pk
+                        else:
+                            field = model._meta.get_field(fieldname)
+                        attname = field.get_attname()
+                        kwargs[fieldname] = getattr(instance, attname)
                         
                     key = generate_base_key(instance.__class__, **kwargs)
                     keys.add(key)
@@ -165,18 +170,30 @@ class Invalidator(object):
         
     ####################################################################
 
-    ERROR_MSG_LOOKUP_SEP = ('Cannot reliably invalidate %(model)s model with lookup "%(lookup)s". ' 
-                            'Lookups with "%(sep)s" are not supported.')
+    ERROR_MSG_INVALID_FIELD_LOOKUP = ('Cannot invalidate %(model)s model with lookup "%(lookup)s". '
+                                  'Lookups must be one or more of: %(fields)s.')
     
     @classmethod
     def validate_lookups(cls, model):
-        """Validates that the allowed_lookups do not contain the LOOKUP_SEP
-        (double-underscore), as invalidation cannot be reliably performed
-        otherwise. This is because invalidation determines the cache key to
+        """Validates that the allowed_lookups correspond to fields within
+        model._meta.fields, as invalidation cannot be reliably performed
+        otherwise.
+        
+        Limiting lookups to model._meta.fields is more restrictive than
+        Django, which allows model fields defined on a related model to be
+        used in lookups (e.g. Author.objects.get(authorprofile=authorprofile),
+        where AuthorProfile has a foreign key pointing to author). In order to
+        invalidate the original state of a modified instance, cachetree copies
+        the instance __dict__ in a post-init signal handler and uses it for
+        invalidation. This __dict__ only contains the values for fields in
+        model._meta.fields, not values for reverse fields. 
+        
+        Limiting lookups also prevents using lookup separators
+        (double-underscore). Invalidation determines the cache key to
         invalidate using the values on the invalidated instance, so all
         lookups must be exact lookups (the default). E.g., if a key was stored
         using username__contains="stanley", it would be difficult or
-        impossible to reconstruct the key for invalidation based simply on
+        impossible to reconstruct the key to be invalidated based simply on
         having an instance with username="brianjaystanley".
         
         Lookup fields are not required to be unique. Since the only use of the
@@ -188,15 +205,17 @@ class Invalidator(object):
         """
         allowed_lookups = get_cache_settings(model).get("allowed_lookups")
         
+        valid_fieldnames = ["pk"] + [field.name for field in model._meta.fields]
+        
         for lookup in allowed_lookups:
             if not isinstance(lookup, (list, tuple)):
                 lookup = [lookup]
                 
             for kwarg in lookup:
-                if LOOKUP_SEP in kwarg:
+                if kwarg not in valid_fieldnames:
                     raise ImproperlyConfigured(
-                        cls.ERROR_MSG_LOOKUP_SEP % dict(
-                            model=model.__name__, lookup=kwarg, sep=LOOKUP_SEP))
+                        cls.ERROR_MSG_INVALID_FIELD_LOOKUP % dict(
+                            model=model.__name__, lookup=kwarg, fields=', '.join(valid_fieldnames)))
         
     ####################################################################
     

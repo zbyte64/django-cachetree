@@ -14,12 +14,12 @@ from django.conf import settings as django_settings
 from django.core.cache import get_cache, DEFAULT_CACHE_ALIAS
 from django.core.cache.backends import locmem
 from . import install, uninstall, _Installer
-from manager import cache
+from cache import cache
 from auth import CachedModelBackend
 import settings as cachetree_settings
 from shortcuts import get_cached_object_or_404
 from exceptions import ImproperlyConfigured
-from invalidation import Invalidator, LOOKUP_SEP, no_invalidation
+from invalidation import Invalidator, no_invalidation
 
 ########################################################################
 
@@ -97,6 +97,10 @@ class CachetreeBaseTestCase(TestCase):
                 },
             },
             "AuthorProfile": {
+                "allowed_lookups":(
+                    "pk",
+                    "author",
+                ),
                 "preload": {
                     "author": {},
                 },
@@ -233,6 +237,52 @@ class CachetreeTestCase(CachetreeBaseTestCase):
         with self.assertNumQueries(0):
             Author.objects.get_cached(first_name="Joe", last_name="Blog")
             
+    ####################################################################
+    
+    def test_one_to_one_field_lookup(self):
+        """Tests caching a root instance using a one to one field lookup.
+        """
+        author = Author.objects.get(pk=1)
+        authorprofile = AuthorProfile.objects.get_cached(author=author)
+        with self.assertNumQueries(0):
+            authorprofile = AuthorProfile.objects.get_cached(author=author)
+        
+    ####################################################################
+     
+    def test_reverse_one_to_one_field_lookup(self):
+        """Tests caching a root instance using a reverse one to one field
+        lookup. This type of lookup is only allowed if invalidation is
+        disabled.
+        """
+        CACHETREE = deepcopy(self.CACHETREE)
+        CACHETREE["cachetree"]["Author"]["allowed_lookups"] += ("authorprofile",)
+        
+        new_settings = dict(CACHETREE=CACHETREE)
+        self.reinstall(new_settings)
+        
+        authorprofile = AuthorProfile.objects.get(pk=1)
+        author = Author.objects.get_cached(authorprofile=authorprofile)
+        with self.assertNumQueries(0):
+            author = Author.objects.get_cached(authorprofile=authorprofile)
+        
+    ####################################################################
+    
+    def test_reverse_foreign_key_field_lookup(self):
+        """Tests caching a root instance using a reverse foreign key field
+        lookup. This type of lookup is only allowed if invalidation is
+        disabled.
+        """
+        CACHETREE = deepcopy(self.CACHETREE)
+        CACHETREE["cachetree"]["Author"]["allowed_lookups"] += ("entry",)
+        
+        new_settings = dict(CACHETREE=CACHETREE)
+        self.reinstall(new_settings)
+        
+        entry = Entry.objects.get(pk=1)
+        author = Author.objects.get_cached(entry=entry)
+        with self.assertNumQueries(0):
+            author = Author.objects.get_cached(entry=entry)
+        
     ####################################################################
     
     def test_timeout(self):
@@ -505,14 +555,61 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         """
         uninstall()
         CACHETREE = deepcopy(self.CACHETREE)
-        CACHETREE["cachetree"]["Entry"]["allowed_lookups"] += ("author__first_name",)
+        CACHETREE["cachetree"]["Entry"]["allowed_lookups"] += ("title__contains",)
         new_settings = dict(CACHETREE=CACHETREE)
         old_settings = self.change_settings(new_settings)
         try:
             install()
         except ImproperlyConfigured, e:
-            self.assertEqual(str(e), Invalidator.ERROR_MSG_LOOKUP_SEP % dict(
-                model="Entry", lookup="author__first_name", sep=LOOKUP_SEP))
+            fieldnames = ["pk"] + [field.name for field in Entry._meta.fields]
+            self.assertEqual(str(e), Invalidator.ERROR_MSG_INVALID_FIELD_LOOKUP % dict(
+                model="Entry", 
+                lookup="title__contains", 
+                fields=', '.join(fieldnames)))
+        else:
+            self.fail("Exception not raised")
+        
+    ####################################################################
+    
+    def test_reverse_field_lookups_not_allowed(self):
+        """Tests that using reverse fields in allowed_lookups raises
+        ImproperlyConfigured.
+        """
+        uninstall()
+        CACHETREE = deepcopy(self.CACHETREE)
+        CACHETREE["cachetree"]["Author"]["allowed_lookups"] += ("authorprofile",)
+        new_settings = dict(CACHETREE=CACHETREE)
+        old_settings = self.change_settings(new_settings)
+        try:
+            install()
+        except ImproperlyConfigured, e:
+            fieldnames = ["pk"] + [field.name for field in Author._meta.fields]
+            self.assertEqual(str(e), Invalidator.ERROR_MSG_INVALID_FIELD_LOOKUP % dict(
+                model="Author", 
+                lookup="authorprofile", 
+                fields=', '.join(fieldnames)))
+        else:
+            self.fail("Exception not raised")
+        
+    ####################################################################
+    
+    def test_m2m_field_lookups_not_allowed(self):
+        """Tests that using m2m fields in allowed_lookups raises
+        ImproperlyConfigured.
+        """
+        uninstall()
+        CACHETREE = deepcopy(self.CACHETREE)
+        CACHETREE["cachetree"]["Entry"]["allowed_lookups"] += ("tags",)
+        new_settings = dict(CACHETREE=CACHETREE)
+        old_settings = self.change_settings(new_settings)
+        try:
+            install()
+        except ImproperlyConfigured, e:
+            fieldnames = ["pk"] + [field.name for field in Entry._meta.fields]
+            self.assertEqual(str(e), Invalidator.ERROR_MSG_INVALID_FIELD_LOOKUP % dict(
+                model="Entry", 
+                lookup="tags", 
+                fields=', '.join(fieldnames)))
         else:
             self.fail("Exception not raised")
         
@@ -597,7 +694,7 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
             self.fail("Exception not raised")
 
     ####################################################################
-
+    
     def test_invalidate_root_instance_multiple_states(self):
         """Tests that both the new and original state of a root instance are
         invalidated.
@@ -773,9 +870,9 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
             # the following query should not be duplicated:
             # SELECT * FROM cachetree_entry WHERE cachetree_entry.id = 5
             # The entry this returns will then be invalidated.
-            
+        
     ####################################################################
-    
+
     def test_invalidate_one_to_one_relation(self):
         """Tests that a cached one to one relation is invalidated.        
         """
