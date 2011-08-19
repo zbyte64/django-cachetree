@@ -1,0 +1,367 @@
+[
+    {
+        "pk": 1, 
+        "model": "cachetree.author", 
+        "fields": {
+            "first_name": "Joe", 
+            "last_name": "Blog"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "cachetree.author", 
+        "fields": {
+            "first_name": "Arthur", 
+            "last_name": "Smith"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "cachetree.authorprofile", 
+        "fields": {
+            "city": "Asheville", 
+            "state": "NC", 
+            "zipcode": "28801", 
+            "author": 1
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "cachetree.authorprofile", 
+        "fields": {
+            "city": "Trinidad", 
+            "state": "CA", 
+            "zipcode": "95570", 
+            "author": 2
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "cachetree.entry", 
+        "fields": {
+            "content": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 
+            "similar_entries": [
+                3
+            ], 
+            "title": "Best Practices for Django Applications", 
+            "tags": [], 
+            "author": 1
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "cachetree.entry", 
+        "fields": {
+            "content": "In a previous article, I wrote about best practices for Django applications. This article describes how to use test-only models in your Django tests. Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.", 
+            "similar_entries": [
+                4
+            ], 
+            "title": "Using Models in Tests", 
+            "tags": [
+                1, 
+                3, 
+                5
+            ], 
+            "author": 1
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "cachetree.entry", 
+        "fields": {
+            "content": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.", 
+            "similar_entries": [
+                1
+            ], 
+            "title": "Best Practices for Python Web Development", 
+            "tags": [], 
+            "author": 2
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "cachetree.entry", 
+        "fields": {
+            "content": "Before reading this article, first read \"How to Use Models in Tests\" and especially \"Best Practices for Django Applications\". Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.", 
+            "similar_entries": [
+                2
+            ], 
+            "title": "Mapping URLs to Views in Django", 
+            "tags": [
+                2, 
+                4, 
+                5
+            ], 
+            "author": 2
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "cachetree.commenter", 
+        "fields": {
+            "first_name": "Alice"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "cachetree.commenter", 
+        "fields": {
+            "first_name": "Alice"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "cachetree.commenter", 
+        "fields": {
+            "first_name": "Ryan"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "cachetree.commenter", 
+        "fields": {
+            "first_name": "James"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "cachetree.commenter", 
+        "fields": {
+            "first_name": "Susan"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "cachetree.comment", 
+        "fields": {
+            "comment": "Great article!", 
+            "entry": 1, 
+            "commenter": 1
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "cachetree.comment", 
+        "fields": {
+            "comment": "Thanks for writing this.", 
+            "entry": 1, 
+            "commenter": 2
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "cachetree.comment", 
+        "fields": {
+            "comment": "It will be nice when Django integrates test-only models into the core.", 
+            "entry": 2, 
+            "commenter": 5
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "cachetree.comment", 
+        "fields": {
+            "comment": "I always wondered how to do this.", 
+            "entry": 2, 
+            "commenter": 4
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "cachetree.comment", 
+        "fields": {
+            "comment": "This is the most helpful article on this blog.", 
+            "entry": 3, 
+            "commenter": 5
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "cachetree.comment", 
+        "fields": {
+            "comment": "Where can I find more details on this topic in the Django docs?", 
+            "entry": 4, 
+            "commenter": 1
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "cachetree.comment", 
+        "fields": {
+            "comment": "I already knew most of what's written here, but it was nice for review.", 
+            "entry": 4, 
+            "commenter": 5
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "cachetree.category", 
+        "fields": {
+            "name": "Django"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "cachetree.category", 
+        "fields": {
+            "name": "Python"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "cachetree.category", 
+        "fields": {
+            "name": "Best Practices"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "cachetree.category", 
+        "fields": {
+            "name": "Web Development"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "cachetree.entrycategory", 
+        "fields": {
+            "category": 3, 
+            "entry": 1, 
+            "is_primary": true
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "cachetree.entrycategory", 
+        "fields": {
+            "category": 1, 
+            "entry": 1, 
+            "is_primary": false
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "cachetree.entrycategory", 
+        "fields": {
+            "category": 1, 
+            "entry": 2, 
+            "is_primary": true
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "cachetree.entrycategory", 
+        "fields": {
+            "category": 2, 
+            "entry": 3, 
+            "is_primary": true
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "cachetree.entrycategory", 
+        "fields": {
+            "category": 3, 
+            "entry": 3, 
+            "is_primary": false
+        }
+    }, 
+    {
+        "pk": 6, 
+        "model": "cachetree.entrycategory", 
+        "fields": {
+            "category": 4, 
+            "entry": 3, 
+            "is_primary": false
+        }
+    }, 
+    {
+        "pk": 7, 
+        "model": "cachetree.entrycategory", 
+        "fields": {
+            "category": 4, 
+            "entry": 4, 
+            "is_primary": false
+        }
+    }, 
+    {
+        "pk": 8, 
+        "model": "cachetree.entrycategory", 
+        "fields": {
+            "category": 1, 
+            "entry": 4, 
+            "is_primary": true
+        }
+    }, 
+    {
+        "pk": 9, 
+        "model": "cachetree.entrycategory", 
+        "fields": {
+            "category": 2, 
+            "entry": 4, 
+            "is_primary": false
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "cachetree.tag", 
+        "fields": {
+            "name": "models"
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "cachetree.tag", 
+        "fields": {
+            "name": "views"
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "cachetree.tag", 
+        "fields": {
+            "name": "tests"
+        }
+    }, 
+    {
+        "pk": 4, 
+        "model": "cachetree.tag", 
+        "fields": {
+            "name": "urls"
+        }
+    }, 
+    {
+        "pk": 5, 
+        "model": "cachetree.tag", 
+        "fields": {
+            "name": "How to"
+        }
+    }, 
+    {
+        "pk": 1, 
+        "model": "cachetree.entrylink", 
+        "fields": {
+            "opens_new_window": true, 
+            "from_entry": 2, 
+            "to_entry": 1
+        }
+    }, 
+    {
+        "pk": 2, 
+        "model": "cachetree.entrylink", 
+        "fields": {
+            "opens_new_window": true, 
+            "from_entry": 4, 
+            "to_entry": 1
+        }
+    }, 
+    {
+        "pk": 3, 
+        "model": "cachetree.entrylink", 
+        "fields": {
+            "opens_new_window": false, 
+            "from_entry": 4, 
+            "to_entry": 2
+        }
+    }
+]
