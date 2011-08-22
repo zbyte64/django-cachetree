@@ -128,7 +128,7 @@ class Invalidator(object):
     
     def invalidate_root_instances(self, *instances):
         """Invalidates all possible versions of the cached ``instances``,
-        using the ``instances``'s allowed_lookups and their current field
+        using the ``instances``'s lookups and their current field
         values. Each instance in ``instances`` must be a root instance,
         that is, an instance of one of the top-level models stored in the
         cache, not a related model instance.
@@ -148,9 +148,9 @@ class Invalidator(object):
             for instance in instance_variants:
                 
                 cache_settings = get_cache_settings(instance.__class__)
-                allowed_lookups = cache_settings.get("allowed_lookups")
+                lookups = cache_settings.get("lookups")
                 
-                for lookup in allowed_lookups:
+                for lookup in lookups:
                     if not isinstance(lookup, (list, tuple)):
                         lookup = [lookup]
                         
@@ -175,7 +175,7 @@ class Invalidator(object):
     
     @classmethod
     def validate_lookups(cls, model):
-        """Validates that the allowed_lookups correspond to fields within
+        """Validates that the lookups correspond to fields within
         model._meta.fields, as invalidation cannot be reliably performed
         otherwise.
         
@@ -203,11 +203,11 @@ class Invalidator(object):
         instance, it will trigger invalidation of the cached instance.
         Subequent calls to get_cached will raise MultipleObjectsReturned.
         """
-        allowed_lookups = get_cache_settings(model).get("allowed_lookups")
+        lookups = get_cache_settings(model).get("lookups")
         
         valid_fieldnames = ["pk"] + [field.name for field in model._meta.fields]
         
-        for lookup in allowed_lookups:
+        for lookup in lookups:
             if not isinstance(lookup, (list, tuple)):
                 lookup = [lookup]
                 
@@ -304,7 +304,7 @@ class Invalidator(object):
         for app_label, model in get_cached_models():
             cls.validate_lookups(model)
             cache_settings = get_cache_settings(model)
-            attrs = cache_settings.get("preload")
+            attrs = cache_settings.get("prefetch")
             cls._add_invalidation_path(model, [], attrs)
             
         cls.connect_signals()

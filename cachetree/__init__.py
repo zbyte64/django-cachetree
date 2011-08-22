@@ -85,12 +85,12 @@ class _Installer(object):
                 cachetree_settings.CACHETREE["auth"] = {}
             if "User" not in cachetree_settings.CACHETREE["auth"]:
                 cachetree_settings.CACHETREE["auth"]["User"] = {}
-            if "allowed_lookups" not in cachetree_settings.CACHETREE["auth"]["User"]:
-                cachetree_settings.CACHETREE["auth"]["User"]["allowed_lookups"] = ()
+            if "lookups" not in cachetree_settings.CACHETREE["auth"]["User"]:
+                cachetree_settings.CACHETREE["auth"]["User"]["lookups"] = ()
             for lookup in ("pk", "username"):
-                if lookup not in cachetree_settings.CACHETREE["auth"]["User"]["allowed_lookups"]:
-                    cachetree_settings.CACHETREE["auth"]["User"]["allowed_lookups"] = tuple(
-                        list(cachetree_settings.CACHETREE["auth"]["User"]["allowed_lookups"]) 
+                if lookup not in cachetree_settings.CACHETREE["auth"]["User"]["lookups"]:
+                    cachetree_settings.CACHETREE["auth"]["User"]["lookups"] = tuple(
+                        list(cachetree_settings.CACHETREE["auth"]["User"]["lookups"]) 
                         + [lookup]
                     )
         

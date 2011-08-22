@@ -72,10 +72,10 @@ def get_cache_settings(model):
         raise ValueError("Caching is not enabled for %(app)s.%(model)s. To enable it, add the %(model)s model to your CACHETREE setting." % dict(
         app=model._meta.app_label, model=model.__name__))
     
-    if "allowed_lookups" not in cache_settings:
-        cache_settings["allowed_lookups"] = ("pk", model._meta.pk.name)
-    if "preload" not in cache_settings:
-        cache_settings["preload"] = {}
+    if "lookups" not in cache_settings:
+        cache_settings["lookups"] = ("pk", model._meta.pk.name)
+    if "prefetch" not in cache_settings:
+        cache_settings["prefetch"] = {}
     if "timeout" not in cache_settings:
         cache_settings["timeout"] = None
         

@@ -83,11 +83,11 @@ class CachetreeBaseTestCase(TestCase):
     CACHETREE = {
         "cachetree": {
             "Author": {
-                "allowed_lookups":(
+                "lookups":(
                     "pk",
                     ("first_name", "last_name"),
                 ),
-                "preload":{
+                "prefetch":{
                     "authorprofile": {},
                     "entry_set": {
                         "comment_set": {
@@ -97,17 +97,17 @@ class CachetreeBaseTestCase(TestCase):
                 },
             },
             "AuthorProfile": {
-                "allowed_lookups":(
+                "lookups":(
                     "pk",
                     "author",
                 ),
-                "preload": {
+                "prefetch": {
                     "author": {},
                 },
             },
             "Entry": {
-                "allowed_lookups":("title",),
-                "preload": {
+                "lookups":("title",),
+                "prefetch": {
                     "author": {},
                     "tags": {},
                     "categories": {},
@@ -119,14 +119,14 @@ class CachetreeBaseTestCase(TestCase):
                 },
             },
             "Tag": {
-                "allowed_lookups": ("name",),
-                "preload": {
+                "lookups": ("name",),
+                "prefetch": {
                     "entry_set": {},
                 },
             },
             "Category": {
-                "allowed_lookups": ("name",),
-                "preload": {
+                "lookups": ("name",),
+                "prefetch": {
                     "entry_set": {},
                     "entrycategories": {},
                 },
@@ -255,7 +255,7 @@ class CachetreeTestCase(CachetreeBaseTestCase):
         disabled.
         """
         CACHETREE = deepcopy(self.CACHETREE)
-        CACHETREE["cachetree"]["Author"]["allowed_lookups"] += ("authorprofile",)
+        CACHETREE["cachetree"]["Author"]["lookups"] += ("authorprofile",)
         
         new_settings = dict(CACHETREE=CACHETREE)
         self.reinstall(new_settings)
@@ -273,7 +273,7 @@ class CachetreeTestCase(CachetreeBaseTestCase):
         disabled.
         """
         CACHETREE = deepcopy(self.CACHETREE)
-        CACHETREE["cachetree"]["Author"]["allowed_lookups"] += ("entry",)
+        CACHETREE["cachetree"]["Author"]["lookups"] += ("entry",)
         
         new_settings = dict(CACHETREE=CACHETREE)
         self.reinstall(new_settings)
@@ -550,12 +550,12 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
     ####################################################################
     
     def test_lookup_separators_not_allowed(self):
-        """Tests that using lookup separators in allowed_lookups raises
+        """Tests that using lookup separators in lookups raises
         ImproperlyConfigured.
         """
         uninstall()
         CACHETREE = deepcopy(self.CACHETREE)
-        CACHETREE["cachetree"]["Entry"]["allowed_lookups"] += ("title__contains",)
+        CACHETREE["cachetree"]["Entry"]["lookups"] += ("title__contains",)
         new_settings = dict(CACHETREE=CACHETREE)
         old_settings = self.change_settings(new_settings)
         try:
@@ -572,12 +572,12 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
     ####################################################################
     
     def test_reverse_field_lookups_not_allowed(self):
-        """Tests that using reverse fields in allowed_lookups raises
+        """Tests that using reverse fields in lookups raises
         ImproperlyConfigured.
         """
         uninstall()
         CACHETREE = deepcopy(self.CACHETREE)
-        CACHETREE["cachetree"]["Author"]["allowed_lookups"] += ("authorprofile",)
+        CACHETREE["cachetree"]["Author"]["lookups"] += ("authorprofile",)
         new_settings = dict(CACHETREE=CACHETREE)
         old_settings = self.change_settings(new_settings)
         try:
@@ -594,12 +594,12 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
     ####################################################################
     
     def test_m2m_field_lookups_not_allowed(self):
-        """Tests that using m2m fields in allowed_lookups raises
+        """Tests that using m2m fields in lookups raises
         ImproperlyConfigured.
         """
         uninstall()
         CACHETREE = deepcopy(self.CACHETREE)
-        CACHETREE["cachetree"]["Entry"]["allowed_lookups"] += ("tags",)
+        CACHETREE["cachetree"]["Entry"]["lookups"] += ("tags",)
         new_settings = dict(CACHETREE=CACHETREE)
         old_settings = self.change_settings(new_settings)
         try:
@@ -622,7 +622,7 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         """
         uninstall()
         CACHETREE = deepcopy(self.CACHETREE)
-        del CACHETREE["cachetree"]["Entry"]["preload"]["entrycategories"]
+        del CACHETREE["cachetree"]["Entry"]["prefetch"]["entrycategories"]
         new_settings = dict(CACHETREE=CACHETREE)
         old_settings = self.change_settings(new_settings)
         try:
@@ -642,7 +642,7 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         """
         uninstall()
         CACHETREE = deepcopy(self.CACHETREE)
-        del CACHETREE["cachetree"]["Category"]["preload"]["entrycategories"]
+        del CACHETREE["cachetree"]["Category"]["prefetch"]["entrycategories"]
         new_settings = dict(CACHETREE=CACHETREE)
         old_settings = self.change_settings(new_settings)
         try:
@@ -662,7 +662,7 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         """
         uninstall()
         CACHETREE = deepcopy(self.CACHETREE)
-        del CACHETREE["cachetree"]["Entry"]["preload"]["links_from"]
+        del CACHETREE["cachetree"]["Entry"]["prefetch"]["links_from"]
         new_settings = dict(CACHETREE=CACHETREE)
         old_settings = self.change_settings(new_settings)
         try:
@@ -682,7 +682,7 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         """
         uninstall()
         CACHETREE = deepcopy(self.CACHETREE)
-        del CACHETREE["cachetree"]["Entry"]["preload"]["links_to"]
+        del CACHETREE["cachetree"]["Entry"]["prefetch"]["links_to"]
         new_settings = dict(CACHETREE=CACHETREE)
         old_settings = self.change_settings(new_settings)
         try:
@@ -829,8 +829,8 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         CACHETREE = {
             "cachetree": {
                 "Entry": {
-                    "allowed_lookups":("title",),
-                    "preload": {
+                    "lookups":("title",),
+                    "prefetch": {
                         "comment_set": {
                             "commenter": {}
                             },
@@ -1035,7 +1035,7 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         when the other side changes.
         """
         CACHETREE = deepcopy(self.CACHETREE)
-        del CACHETREE["cachetree"]["Entry"]["preload"]["tags"]
+        del CACHETREE["cachetree"]["Entry"]["prefetch"]["tags"]
         
         new_settings = dict(CACHETREE=CACHETREE)
         self.reinstall(new_settings)
@@ -1066,7 +1066,7 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         when the other side changes.
         """
         CACHETREE = deepcopy(self.CACHETREE)
-        del CACHETREE["cachetree"]["Tag"]["preload"]["entry_set"]
+        del CACHETREE["cachetree"]["Tag"]["prefetch"]["entry_set"]
         
         new_settings = dict(CACHETREE=CACHETREE)
         self.reinstall(new_settings)
@@ -1121,7 +1121,7 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         """
         entry = Entry.objects.get_cached(title="Using Models in Tests")
         
-        # Make sure the tags were preloaded.
+        # Make sure the tags were prefetched.
         with self.assertNumQueries(0):
             tags = list(entry.tags.all())
         
@@ -1144,7 +1144,7 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         """
         entry = Entry.objects.get_cached(title="Using Models in Tests")
         
-        # Make sure the tags were preloaded.
+        # Make sure the tags were prefetched.
         with self.assertNumQueries(0):
             tags = list(entry.tags.all())
         
@@ -1166,7 +1166,7 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         """
         entry = Entry.objects.get_cached(title="Using Models in Tests")
         
-        # Make sure the tags were preloaded.
+        # Make sure the tags were prefetched.
         with self.assertNumQueries(0):
             tags = list(entry.tags.all())
         

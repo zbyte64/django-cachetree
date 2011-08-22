@@ -22,12 +22,12 @@ class CacheManagerMixin:
         the cache, gets it from the database and puts it in the cache.
         """
         cache_settings = get_cache_settings(self.model)
-        allowed_lookups = cache_settings.get("allowed_lookups")
+        lookups = cache_settings.get("lookups")
         
         keys = kwargs.keys()
-        single_kwarg_match = len(keys) == 1 and keys[0] in allowed_lookups
+        single_kwarg_match = len(keys) == 1 and keys[0] in lookups
         multi_kwarg_match = len(keys) != 1 and any(
-            sorted(keys) == sorted(lookup) for lookup in allowed_lookups if isinstance(lookup, (list, tuple)))
+            sorted(keys) == sorted(lookup) for lookup in lookups if isinstance(lookup, (list, tuple)))
         if not single_kwarg_match and not multi_kwarg_match:
             raise ValueError("Caching not allowed with kwargs %s" % ", ".join(keys))
         
@@ -51,13 +51,13 @@ class CacheManagerMixin:
             cache.set(key, obj, cache_settings.get("timeout"))
             raise
         
-        self._preload_related(obj, cache_settings.get("preload"))            
+        self._prefetch_related(obj, cache_settings.get("prefetch"))            
         cache.set(key, obj, cache_settings.get("timeout"))
         return obj
        
     ####################################################################
     
-    def _preload_related(self, objs, attrs):
+    def _prefetch_related(self, objs, attrs):
         """Recursively follows the `attrs` on each of the `objs` in order to
         populate the objects' caches.
         """
@@ -71,7 +71,7 @@ class CacheManagerMixin:
                 try:
                     attr = getattr(obj, attr_name)
                     
-                # If the object doesn't exist, we can't preload it.
+                # If the object doesn't exist, we can't prefetch it.
                 except ObjectDoesNotExist:
                     continue
                 
@@ -98,7 +98,7 @@ class CacheManagerMixin:
                     attr = related_instances
                 
                 if child_attrs:
-                    self._preload_related(attr, child_attrs)
+                    self._prefetch_related(attr, child_attrs)
 
 ########################################################################
     
