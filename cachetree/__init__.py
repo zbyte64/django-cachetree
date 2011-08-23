@@ -13,8 +13,10 @@ from django.conf import settings as django_settings
 import settings as cachetree_settings
 from manager import CacheManagerMixin
 from utils import get_cached_models
-from invalidation import Invalidator
+from invalidation import Invalidator, invalidate, no_invalidation
+from exceptions import ImproperlyConfigured
 from auth import CachedModelBackend
+from shortcuts import get_cached_object_or_404
 
 ########################################################################
 
