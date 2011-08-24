@@ -11,7 +11,7 @@ version = '0.1.0'
 
 setup(name='django-cachetree',
       version=version,
-      description="caching of configurable trees of related model instances in Django",
+      description="caches configurable trees of related model instances in Django",
       long_description=open('README.rst').read(),
       classifiers=[
           'Development Status :: 4 - Beta',
