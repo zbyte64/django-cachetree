@@ -29,6 +29,7 @@ setup(name='django-cachetree',
       author_email='brian@brianjaystanley.com',
       license='MIT',
       packages=['cachetree'],
+      package_data={'cachetree': ['fixtures/testdata.json']},
       install_requires=['django',],
 )
 
