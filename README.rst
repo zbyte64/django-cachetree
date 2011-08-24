@@ -16,7 +16,8 @@ This means that when you retrieve the user object from the cache, the related
 objects are there with it and you can access them without hitting the database
 (or hitting the cache again)::
 
-    user = User.objects.get_cached(pk=1) # user not yet in cache, hits the database and prefetches related objects
+    user = User.objects.get_cached(pk=1) # user not yet in cache, hits the 
+                                         # database and prefetches related objects
 
     ....
     
@@ -210,7 +211,7 @@ and the initial ``Author`` objects for that entry.
 **Important Caveat**: ``django-cachetree`` does not perform invalidation when
 you run an ``UPDATE`` query using a manager's ``update()`` method. You will
 either need to invalidate the affected instances yourself by calling
-``invalidate()`` (see below), rely on the cached objects to expire naturally,
+``invalidate()`` (described below), rely on the cached objects to expire naturally,
 or avoid using ``update()``.
     
 Cachetree Authentication Backend
