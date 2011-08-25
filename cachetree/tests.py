@@ -191,13 +191,8 @@ class CachetreeBaseTestCase(TestCase):
         """
         old_settings = {}
         for name, value in new_settings.iteritems():
-            try:
-                old_setting = getattr(cachetree_settings, name, None)
-            except AttributeError:
-                pass
-            else:
-                old_settings[name] = old_setting
-                
+            old_setting = getattr(cachetree_settings, name, None)
+            old_settings[name] = old_setting    
             setattr(cachetree_settings, name, value)
             
         return old_settings
@@ -490,12 +485,6 @@ class CachetreeAuthTestCase(CachetreeBaseTestCase):
             self.AUTHENTICATION_BACKENDS_ORIG = django_settings.AUTHENTICATION_BACKENDS
             django_settings.AUTHENTICATION_BACKENDS = (CachedModelBackend.BACKEND_PATH,)
         
-        try:
-            import cachetree
-            known_path = True
-        except ImportError:
-            known_path = False
-    
         super(CachetreeAuthTestCase, self).setUp()
         self.username = "cacheuser"
         self.password = "cachepassword"
