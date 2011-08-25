@@ -1,20 +1,11 @@
 ``django-cachetree`` provides caching of configurable trees of related model
-instances in Django.
-
-Related model instances, such as a user instance and the user's photos and
-comments on a photo-sharing site, often need to be retrieved and used
-together. A site with a cache might cache the user objects to reduce load on
-the database, but accessing ``user.photo_set`` or ``user.comment_set`` will
-still require hitting the database. The site could also cache the photo set or
-comment set, but this quickly gets cumbersome and requires fetching related
-objects directly from the cache instead of accessing them more naturally via
-the user they relate to (using ``user.photo_set`` or ``user.comment_set``).
-``django-cachetree`` allows you to easily cache these trees of related objects
-as a single item in the cache. When a user is fetched from the database, its
-related objects are "prefetched" before the user object is set in the cache.
-This means that when you retrieve the user object from the cache, the related
-objects are there with it and you can access them without hitting the database
-(or hitting the cache again)::
+instances in Django. For example, with ``django-cachetree`` you could easily
+cache a user instance and the user's photos and comments on a photo-sharing
+site as a single item in the cache. When a user is fetched from the database,
+its related objects are "prefetched" before the user object is set in the
+cache. This means that when you retrieve the user object from the cache, the
+related objects are there with it and you can access them without hitting the
+database (or hitting the cache again)::
 
     user = User.objects.get_cached(pk=1) # user not yet in cache, hits the 
                                          # database and prefetches related objects
@@ -86,11 +77,11 @@ you would write::
     }
 
 The dictionary for each root model can contain three optional keys,
-``"timeout"``, ``"lookup"``, and ``"prefetch"``.
+``"timeout"``, ``"lookups"``, and ``"prefetch"``.
 
 ``timeout`` 
     The timeout, in seconds, to use when caching instances of this model.
-    Defaults to your global timeout setting in ``CACHES``.
+    Overrides your global timeout setting in ``CACHES``.
     
 ``lookups``
     A tuple containing the field names that can be used as kwargs when calling
@@ -104,7 +95,7 @@ The dictionary for each root model can contain three optional keys,
 
         CACHETREE = {
             "auth": {
-                "User":{
+                "User": {
                     "lookups": (
                         "id",
                         ("first_name", "last_name"),
@@ -128,22 +119,21 @@ The dictionary for each root model can contain three optional keys,
     with the root model instance. Each key should be the attribute name (as a
     string) of the related instance(s) to be prefetched. Each key's value
     should be a dictionary of attribute names to prefetch on the related
-    instance's related instance(s), or an empty dictionary (or ``None``) if no
-    further relationships should be prefetched. Any relationship can be
-    prefetched: ``OneToOneField``, ``ForeignKey``, and ``ManyToManyField``,
-    forward or reverse. For example, to cache author objects, their set of
-    entries, those entries' comments, and each comment's commenter, you might
-    write::
+    instance(s), or an empty dictionary (or ``None``) if no further
+    relationships should be prefetched. Any relationship can be prefetched:
+    ``OneToOneField``, ``ForeignKey``, and ``ManyToManyField``, forward or
+    reverse. For example, to cache author objects, their set of entries, those
+    entries' comments, and each comment's commenter, you might write::
 
         CACHETREE = {
             "myapp": {
                 "Author": {
-                    "lookups":(
+                    "lookups": (
                         "pk",
                         "id",
                         ("first_name", "last_name"),
                     ),
-                    "prefetch":{
+                    "prefetch": {
                         "entry_set": {
                             "comment_set": {
                                 "commenter": {},
@@ -161,7 +151,7 @@ The dictionary for each root model can contain three optional keys,
     
     If invalidation is enabled, there is one restriction on prefetching. If
     you prefetch a ``ManyToManyField`` (forward or reverse) that defines a
-    custom intermediary model (as specified with the ``through`` attribute on
+    custom intermediary model (as specified with the ``through`` argument on
     the model field definition), you must also prefetch the attribute that
     points to the intermediary instances. For example, if you have an
     ``Entry`` model related to a ``Category`` model through a custom
@@ -193,20 +183,21 @@ How Invalidation Works
 ======================
 When you call ``cachetree.install()``, ``django-cachetree`` analyzes your
 ``CACHETREE`` setting and determines which relationships must be followed in
-order to traverse the tree backwards from prefetched related instances to their
-root model instances. Using this information, whenever a model defined in your
-``CACHETREE`` setting (either as a root model or as a prefetched relationship)
-is created, saved, or deleted (and in the case of ``ManyToManyField``\s,
-added, removed, or cleared using the ``ManyToManyField`` manager's ``add()``,
-``remove()``, or ``clear()`` methods), ``django-cachetree`` traverses its
-relationships back to the root model instance(s) that need to be invalidated.
-``django-cachetree`` uses a ``post_init`` signal handler to keep track of each
-instance's initial state, and when the instance changes and is saved,
-``django-cachetree`` follows both the instance's new and initial values to
-find the root model instances that need to be invalidated. For example, if you
-cache ``Author`` objects along with their ``entry_set``, and you change an
-``Entry`` object's author, ``django-cachetree`` will invalidate both the new
-and the initial ``Author`` objects for that entry.
+order to traverse the tree backwards from prefetched related instances to
+their root model instances. Using this information, whenever a model defined
+in your ``CACHETREE`` setting (either as a root model or as a prefetched
+relationship) is created, saved, or deleted (and in the case of
+``ManyToManyField``\s and reverse ``ForeignKey``\s, added, removed, or cleared
+using the field manager's ``add()``, ``remove()``, or ``clear()`` methods),
+``django-cachetree`` traverses its relationships back to the root model
+instance(s) that need to be invalidated. ``django-cachetree`` uses a
+``post_init`` signal handler to keep track of each instance's initial state,
+and when the instance changes and is saved, ``django-cachetree`` follows both
+the instance's new and initial values to find the root model instances that
+need to be invalidated. For example, if you cache ``Author`` objects along
+with their ``entry_set``, and you change an ``Entry`` object's author,
+``django-cachetree`` will invalidate both the new and the initial ``Author``
+objects for that entry.
 
 **Important Caveat**: ``django-cachetree`` does not perform invalidation when
 you run an ``UPDATE`` query using a manager's ``update()`` method. You will
