@@ -142,6 +142,7 @@ class CachetreeBaseTestCase(TestCase):
         """
         self.CACHES_ORIG = django_settings.CACHES
         django_settings.CACHES.update(self.CACHES)
+        self.cache_wrapped_orig = cache._wrapped
         cache._wrapped = get_cache(self.TEST_CACHE_NAME)
         
         new_settings = self.get_test_settings()
@@ -167,7 +168,7 @@ class CachetreeBaseTestCase(TestCase):
         self.assertEqual(cache.__class__, locmem.LocMemCache)
         cache.clear()
         django_settings.CACHES = self.CACHES_ORIG
-        cache._wrapped = get_cache(DEFAULT_CACHE_ALIAS)
+        cache._wrapped = self.cache_wrapped_orig
         
         self.reinstall(self.orig_settings)
         
