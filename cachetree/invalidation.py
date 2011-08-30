@@ -262,8 +262,11 @@ class Invalidator(object):
    
         if requires_invalidation(model, instance.__class__):
             # Get the related instances that were added or removed using the pk_set.
-            if action in ("post_add", "post_remove") and pk_set:
-                related_instances = model._default_manager.using(using).filter(pk__in=pk_set)
+            if action in ("post_add", "post_remove"):
+                if pk_set:
+                    related_instances = model._default_manager.using(using).filter(pk__in=pk_set)
+                else:
+                    related_instances = []
             
             # Get the related instances that are to be cleared.   
             elif action == "pre_clear":

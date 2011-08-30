@@ -1128,6 +1128,20 @@ class CachetreeInvalidationTestCase(CachetreeBaseTestCase):
         
     ####################################################################
     
+    def test_duplicate_add(self):
+        """Tests that adding an object using add() that was already added
+        doesn't cause an invalidation error. Fix for Issue #1 on Github.
+        """
+        entry = Entry.objects.get(title="Using Models in Tests")
+        tag = Tag.objects.get(pk=1)
+        self.assertIn(tag, entry.tags.all())
+        
+        # Re-add the tag. Django's related manager will send an empty pk_set,
+        # and cachetree shouldn't choke on it.
+        entry.tags.add(tag)
+        
+    ####################################################################
+    
     def test_m2m_remove_uncaches_all(self):
         """Tests that calling the remove() method on a many to many manager
         uncaches the all() method for that manager.
