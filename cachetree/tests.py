@@ -461,8 +461,6 @@ class CachetreeTestCase(CachetreeBaseTestCase):
         
 ########################################################################
     
-@skipUnless("django.contrib.auth" in django_settings.INSTALLED_APPS, 
-            "django.contrib.auth is not in INSTALLED_APPS")
 class CachetreeAuthTestCase(CachetreeBaseTestCase):
     """Tests cachetree's auth functionality.
     """
@@ -521,6 +519,10 @@ class CachetreeAuthTestCase(CachetreeBaseTestCase):
         user = backend.get_user(user_id=self.user.id)
         with self.assertNumQueries(0):
             user = backend.get_user(user_id=self.user.id)
+
+CachetreeAuthTestCase = skipUnless(
+    "django.contrib.auth" in django_settings.INSTALLED_APPS, 
+    "django.contrib.auth is not in INSTALLED_APPS")(CachetreeAuthTestCase)
 
 ########################################################################
 
