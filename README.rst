@@ -28,7 +28,7 @@ related objects cached with them are changed, deleted, or created.
 
 Requirements 
 ============ 
-``django-cachetree`` requires Django 1.3.
+``django-cachetree`` requires Django 1.3 and Python 2.5, 2.6, or 2.7.
 
 Installation
 ============
