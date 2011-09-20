@@ -35,6 +35,7 @@ def generate_base_key(model, **kwargs):
         app_label=model._meta.app_label, 
         model=model.__name__, 
         parts=";".join(key_parts))
+    raw_key = raw_key.encode('utf-8')
     digest = md5(raw_key).hexdigest()
     
     # Whitespace is stripped but the hexdigest ensures uniqueness

@@ -7,7 +7,7 @@ except ImportError:
     from distutils.core import setup
 
 
-version = "0.1.1"
+version = "0.1.2"
 
 setup(name="django-cachetree",
       version=version,
