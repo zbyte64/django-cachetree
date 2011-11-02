@@ -54,7 +54,60 @@ class CacheManagerMixin:
         self._prefetch_related(obj, cache_settings.get("prefetch"))            
         cache.set(key, obj, cache_settings.get("timeout"))
         return obj
-       
+    
+    def get_many_cached(self, list_of_kwargs):
+        """Gets the model instance from the cache, or, if the instance is not in
+        the cache, gets it from the database and puts it in the cache.
+        """
+        cache_settings = get_cache_settings(self.model)
+        lookups = cache_settings.get("lookups")
+        
+        cache_keys = dict()
+        
+        for kwargs in list_of_kwargs:
+            keys = kwargs.keys()
+            single_kwarg_match = len(keys) == 1 and keys[0] in lookups
+            multi_kwarg_match = len(keys) != 1 and any(
+                sorted(keys) == sorted(lookup) for lookup in lookups if isinstance(lookup, (list, tuple)))
+            if not single_kwarg_match and not multi_kwarg_match:
+                raise ValueError("Caching not allowed with kwargs %s" % ", ".join(keys))
+            
+            # Get object from cache or db.
+            key = generate_base_key(self.model, **kwargs)
+            cache_keys[key] = kwargs
+        
+        objects = cache.get_many(cache_keys.keys())
+        pending_cache_update = dict()
+        cached_objects = list()
+        
+        for key, kwargs in cache_keys.iteritems():
+            obj = objects.get(key, None)
+            if obj is not None:
+                if isinstance(obj, ObjectDoesNotExist):
+                    raise self.model.DoesNotExist(repr(obj))
+                elif isinstance(obj, MultipleObjectsReturned):
+                    raise self.model.MultipleObjectsReturned(repr(obj))
+                else:
+                    cached_objects.append(obj)
+                    continue
+            try:
+                obj = self.get(**kwargs)
+            except (ObjectDoesNotExist, MultipleObjectsReturned), e:
+                # The model-specific subclasses of these exceptions are not
+                # pickleable, so we cache the base exception and reconstruct the
+                # specific exception when fetching from the cache.
+                obj = e.__class__.__base__(repr(e))
+                cache.set(key, obj, cache_settings.get("timeout"))
+                raise
+            
+            self._prefetch_related(obj, cache_settings.get("prefetch"))
+            pending_cache_update[key] = obj
+            cached_objects.append(obj)
+        
+        if pending_cache_update:
+            cache.set_many(pending_cache_update, cache_settings.get("timeout"))
+        return cached_objects
+   
     ####################################################################
     
     def _prefetch_related(self, objs, attrs):
@@ -101,4 +154,4 @@ class CacheManagerMixin:
                     self._prefetch_related(attr, child_attrs)
 
 ########################################################################
-    
+
