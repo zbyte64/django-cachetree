@@ -51,7 +51,8 @@ class CacheManagerMixin:
             cache.set(key, obj, cache_settings.get("timeout"))
             raise
         
-        self._prefetch_related(obj, cache_settings.get("prefetch"))            
+        self._prefetch_related(obj, cache_settings.get("prefetch"))
+        self._tag_object_as_from_cache(obj)
         cache.set(key, obj, cache_settings.get("timeout"))
         return obj
     
@@ -101,6 +102,7 @@ class CacheManagerMixin:
                 raise
             
             self._prefetch_related(obj, cache_settings.get("prefetch"))
+            self._tag_object_as_from_cache(obj)
             pending_cache_update[key] = obj
             cached_objects.append(obj)
         
@@ -152,6 +154,9 @@ class CacheManagerMixin:
                 
                 if child_attrs:
                     self._prefetch_related(attr, child_attrs)
+    
+    def _tag_object_as_from_cache(self, obj):
+        obj._from_cachetree = True
 
 ########################################################################
 
