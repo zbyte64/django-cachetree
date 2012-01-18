@@ -23,6 +23,8 @@ class CacheManagerMixin:
         """
         cache_settings = get_cache_settings(self.model)
         lookups = cache_settings.get("lookups")
+        #TODO intelligently do the select related
+        base_qs = self.all().select_related()
         
         keys = kwargs.keys()
         single_kwarg_match = len(keys) == 1 and keys[0] in lookups
@@ -42,7 +44,7 @@ class CacheManagerMixin:
             else:
                 return obj
         try:
-            obj = self.get(**kwargs)
+            obj = base_qs.get(**kwargs)
         except (ObjectDoesNotExist, MultipleObjectsReturned), e:
             # The model-specific subclasses of these exceptions are not
             # pickleable, so we cache the base exception and reconstruct the
@@ -62,6 +64,8 @@ class CacheManagerMixin:
         """
         cache_settings = get_cache_settings(self.model)
         lookups = cache_settings.get("lookups")
+        #TODO intelligently do the select related
+        base_qs = self.all().select_related()
         
         cache_keys = dict()
         
@@ -92,7 +96,7 @@ class CacheManagerMixin:
                     cached_objects.append(obj)
                     continue
             try:
-                obj = self.get(**kwargs)
+                obj = base_qs.get(**kwargs)
             except (ObjectDoesNotExist, MultipleObjectsReturned), e:
                 # The model-specific subclasses of these exceptions are not
                 # pickleable, so we cache the base exception and reconstruct the
@@ -140,7 +144,8 @@ class CacheManagerMixin:
                 # the queryset cache with those results. Then, on the parent
                 # object, stored the queryset in a cached attribute.
                 elif isinstance(attr, Manager):
-                    queryset = attr.all()
+                    #TODO do select related based on child_attrs
+                    queryset = attr.all().select_related()
                     related_instances = []
                     for instance in queryset:
                         related_instances.append(instance)
