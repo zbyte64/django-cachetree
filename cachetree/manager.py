@@ -6,6 +6,8 @@ Cachetree Manager
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models.manager import Manager
+from django.db.models.fields import FieldDoesNotExist
+from django.db.models.query_utils import select_related_descend
 from utils import generate_base_key, get_cache_settings
 from exceptions import ImproperlyConfigured
 import settings as cachetree_settings
@@ -17,14 +19,40 @@ class CacheManagerMixin:
     
     ####################################################################
     
+    def _get_select_related_from_attrs(self, model, attrs):
+        opts = model._meta
+        related = list()
+        for attr_name, child_attrs in attrs.iteritems():
+            try:
+                field = opts.get_field(attr_name)
+            except FieldDoesNotExist:
+                pass
+            else:
+                if select_related_descend(field, False, []):
+                    if child_attrs:
+                        subrelated = self._get_select_related_from_attrs(field.rel, child_attrs)
+                        if subrelated:
+                            for entry in subrelated:
+                                related.append('%s__%s' % (attr_name, entry))
+                        else:
+                            related.append(attr_name)
+                    else:
+                        related.append(attr_name)
+        return related
+    
     def get_cached(self, **kwargs):
         """Gets the model instance from the cache, or, if the instance is not in
         the cache, gets it from the database and puts it in the cache.
         """
         cache_settings = get_cache_settings(self.model)
         lookups = cache_settings.get("lookups")
-        #TODO intelligently do the select related
-        base_qs = self.all().select_related()
+        prefetch = cache_settings.get("prefetch")
+        
+        related = self._get_select_related_from_attrs(self.model, prefetch)
+        if related:
+            base_qs = self.all().select_related(*related)
+        else:
+            base_qs = self.all()
         
         keys = kwargs.keys()
         single_kwarg_match = len(keys) == 1 and keys[0] in lookups
@@ -53,7 +81,7 @@ class CacheManagerMixin:
             cache.set(key, obj, cache_settings.get("timeout"))
             raise
         
-        self._prefetch_related(obj, cache_settings.get("prefetch"))
+        self._prefetch_related(obj, prefetch)
         self._tag_object_as_from_cache(obj)
         cache.set(key, obj, cache_settings.get("timeout"))
         return obj
@@ -64,8 +92,13 @@ class CacheManagerMixin:
         """
         cache_settings = get_cache_settings(self.model)
         lookups = cache_settings.get("lookups")
-        #TODO intelligently do the select related
-        base_qs = self.all().select_related()
+        prefetch = cache_settings.get("prefetch")
+        
+        related = self._get_select_related_from_attrs(self.model, prefetch)
+        if related:
+            base_qs = self.all().select_related(*related)
+        else:
+            base_qs = self.all()
         
         cache_keys = dict()
         
@@ -105,7 +138,7 @@ class CacheManagerMixin:
                 cache.set(key, obj, cache_settings.get("timeout"))
                 raise
             
-            self._prefetch_related(obj, cache_settings.get("prefetch"))
+            self._prefetch_related(obj, prefetch)
             self._tag_object_as_from_cache(obj)
             pending_cache_update[key] = obj
             cached_objects.append(obj)
@@ -144,8 +177,11 @@ class CacheManagerMixin:
                 # the queryset cache with those results. Then, on the parent
                 # object, stored the queryset in a cached attribute.
                 elif isinstance(attr, Manager):
-                    #TODO do select related based on child_attrs
-                    queryset = attr.all().select_related()
+                    related = self._get_select_related_from_attrs(attr.model, child_attrs)
+                    if related:
+                        queryset = attr.all().select_related(*related)
+                    else:
+                        queryset = attr.all()
                     related_instances = []
                     for instance in queryset:
                         related_instances.append(instance)
